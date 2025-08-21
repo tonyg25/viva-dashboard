@@ -1,1 +1,368 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Viva Pipeline — FY (Sep→Aug)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--muted:#9ca3af;--text:#e5e7eb;--radius:16px;}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0));padding:18px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(255,255,255,.06)}
+.brand{font-weight:700;letter-spacing:.2px} nav a{color:var(--text);opacity:.8;text-decoration:none;padding:8px 14px;border-radius:999px;background:#0b1220;margin-left:8px;border:1px solid rgba(255,255,255,.06)} nav a.active{background:#111b32;opacity:1}
+main{padding:18px;max-width:1200px;margin:0 auto} .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:16px;box-shadow:0 10px 20px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04)}
+.kpi h3{margin:0 0 10px;font-weight:600;color:#9ca3af;font-size:13px} .kpi .value{font-size:28px;font-weight:700;letter-spacing:.3px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px} .card{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:16px}
+.card h4{margin:0 0 12px;font-size:14px;color:#9ca3af;font-weight:600} .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{background:#0b1220;color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;cursor:pointer} .btn:active{transform:translateY(1px)}
+.btn-xs{padding:4px 8px;font-size:12px;border-radius:8px} .btn-won{border-color:#34d399;color:#34d399} .btn-lost{border-color:#ef4444;color:#ef4444} .btn-prog{border-color:#f59e0b;color:#f59e0b}
+input[type="number"],input[type="text"],select,input[type="date"]{background:#0b1220;border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:10px;padding:9px 10px}
+table{width:100%;border-collapse:collapse;font-size:14px} th,td{border-bottom:1px solid rgba(255,255,255,.07);padding:10px;text-align:left} th{color:#9ca3af;font-weight:600}
+.subtle{color:#9ca3af;font-size:13px} .hidden{display:none} @media (max-width:920px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .grid{grid-template-columns:1fr}}
+.form-grid{display:grid;grid-template-columns:1fr 140px 160px 1fr 1fr 1fr auto;gap:8px;align-items:center}
+.pill{background:#1b2945;border:1px solid rgba(255,255,255,.14);color:#ffffff;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:600;letter-spacing:.1px}
+.pill.active{background:#2563eb;border-color:#2563eb;color:#ffffff} .pill:hover{filter:brightness(1.08)}
+#diag{position:fixed;right:10px;bottom:10px;background:#1b2945;border:1px solid #2563eb;color:#fff;padding:6px 10px;border-radius:10px;font:12px/1.2 Inter, sans-serif;opacity:.9;z-index:9999;display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Viva Pipeline — FY (Sep→Aug)</div>
+  <nav>
+    <a href="#" data-tab="home" class="active">Home</a>
+    <a href="#" data-tab="add">Add</a>
+    <a href="#" data-tab="list">List</a>
+    <a href="#" data-tab="analytics">Analytics</a>
+    <a href="#" data-tab="settings">Settings</a>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="tab">
+    <h2>Dashboard</h2>
+    <p class="subtle">Financial year KPIs (Sep→Aug). Percentages are value‑based. “Leads Quoted” = Won + Lost + In Progress.</p>
+    <div class="kpis">
+      <div class="kpi"><h3>Budget (FY)</h3><div id="kpi-budget" class="value">£0</div></div>
+      <div class="kpi"><h3>Won (FY)</h3><div id="kpi-won" class="value">£0</div></div>
+      <div class="kpi"><h3>Gap to Budget</h3><div id="kpi-gap" class="value">£0</div></div>
+      <div class="kpi"><h3>Leads Quoted</h3><div id="kpi-leads" class="value">0</div></div>
+      <div class="kpi"><h3>Total Quoted Value (FY)</h3><div id="kpi-totalq" class="value">£0</div></div>
+      <div class="kpi"><h3>% Won (Value)</h3><div id="kpi-pwon" class="value">0%</div></div>
+      <div class="kpi"><h3>% Lost (Value)</h3><div id="kpi-plost" class="value">0%</div></div>
+      <div class="kpi"><h3>% Outstanding (Value)</h3><div id="kpi-pout" class="value">0%</div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h4>Budget vs Won (FY)</h4><canvas id="barBudget"></canvas></div>
+      <div class="card"><h4>Status (by Value)</h4><canvas id="doughnutStatus"></canvas></div>
+    </div>
+    <div class="row" style="margin-top:16px;">
+      <button class="btn" id="reset-default">Reset to Embedded FY data</button>
+      <button class="btn" id="save-default">Set current deals as new embedded default</button>
+      <label class="btn" for="file-input">Upload Excel/CSV</label>
+      <input id="file-input" type="file" accept=".xlsx,.xls,.csv" class="hidden">
+      <button class="btn" id="hard-reset">Hard reset (clear saved data)</button>
+    </div>
+  </section>
+
+  <section id="add" class="tab hidden">
+    <h2>Add / Import</h2>
+    <p class="subtle">Upload a new Excel/CSV. Excel should contain a sheet named <strong>MASTER DEALS LIST</strong>.</p>
+  </section>
+
+  <section id="list" class="tab hidden">
+    <h2>Deals</h2>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px;">
+        <input id="search" type="text" placeholder="Search deals…"/>
+        <button class="btn" id="download-csv">Download CSV</button>
+        <span class="subtle" id="count-chip">0 deals</span>
+      </div>
+      <div class="row" style="margin-bottom:12px;">
+        <div class="form-grid" style="width:100%">
+          <input id="new-title" type="text" placeholder="Deal title"/>
+          <input id="new-value" type="number" placeholder="Value (£)" step="100"/>
+          <select id="new-status"><option value="">Status…</option><option>In Progress</option><option>Won</option><option>Lost</option></select>
+          <input id="new-sector" type="text" placeholder="Sector"/>
+          <input id="new-source" type="text" placeholder="Source"/>
+          <input id="new-started" type="date" placeholder="Started"/>
+          <button class="btn" id="add-deal">Add Deal</button>
+        </div>
+      </div>
+      <div style="overflow:auto; max-height:60vh;">
+        <table id="deals-table">
+          <thead><tr><th>Deal</th><th>Value</th><th>Status</th><th>Sector</th><th>Source</th><th>Started</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="analytics" class="tab hidden">
+    <h2>Analytics</h2>
+    <p class="subtle">Pick a sector to drill into. Chips show the top sectors by total quoted value (plus “All”).</p>
+    <div class="card" style="margin-bottom:12px;"><div id="sector-chips" class="row"></div></div>
+    <div class="kpis">
+      <div class="kpi"><h3>Target (Sector)</h3><div class="value" id="a-target">£0</div></div>
+      <div class="kpi"><h3>Won</h3><div class="value" id="a-won">£0</div></div>
+      <div class="kpi"><h3>Lost</h3><div class="value" id="a-lost">£0</div></div>
+      <div class="kpi"><h3>Outstanding</h3><div class="value" id="a-out">£0</div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h4>Status mix (Value)</h4><canvas id="sectorStatus"></canvas></div>
+      <div class="card"><h4>Top Sources (Value)</h4><canvas id="sectorSources"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <h4>Top Deals in Sector</h4>
+      <div style="overflow:auto; max-height:45vh;">
+        <table id="sector-deals"><thead><tr><th>Deal</th><th>Value</th><th>Status</th><th>Source</th><th>Started</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings" class="tab hidden">
+    <h2>Settings</h2>
+    <div class="card">
+      <div class="row">
+        <label>Budget (FY): £ <input id="input-budget" type="number" step="1000" value="408000"/></label>
+        <button class="btn" id="apply-budget">Apply</button>
+      </div>
+      <p class="subtle">Saved in your browser.</p>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <h3 style="margin:0 0 10px;">Sector Targets</h3>
+      <div class="row" style="margin-bottom:10px;">
+        <select id="st-sector" style="min-width:220px"></select>
+        <input id="st-value" type="number" step="1000" placeholder="Target (£)"/>
+        <button class="btn" id="st-save">Save Target</button>
+      </div>
+      <div style="overflow:auto; max-height:40vh;">
+        <table id="st-table"><thead><tr><th>Sector</th><th>Target</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="diag"></div>
+
+<script>
+(function(){var box=document.getElementById('diag'); function show(t){ try{ box.textContent=t; box.style.display='inline-block'; setTimeout(function(){box.style.display='none';},3000);}catch(e){} } 
+window.diag=show; window.addEventListener('error', function(e){ show('JS error: '+e.message); console.error(e); }); show('Dashboard loaded'); })();
+
+var EMBEDDED_DATA = { initial: [] };
+
+function fmtGBP(n){ n = Number(n||0); return '£'+ n.toLocaleString('en-GB',{maximumFractionDigits:0}); }
+function pct(n){ n = Number(n||0); return n.toLocaleString('en-GB',{maximumFractionDigits:0})+'%'; }
+function title(s){ return (s||'').toString().trim(); }
+function cleanNumber(v){ if(v==null) return 0; if(typeof v==='number'){ return isFinite(v)?v:0; } var s=String(v).replace(/[^0-9.,-]/g,'').replace(/,/g,''); var n=Number(s); return isFinite(n)?n:0; }
+function excelSerialToISO(v){
+  if(typeof v==='number' && v>=20000 && v<=60000){ var ms=Math.round((v-25569)*86400)*1000; var d=new Date(ms); var y=d.getUTCFullYear(); var m=('0'+(d.getUTCMonth()+1)).slice(-2); var da=('0'+d.getUTCDate()).slice(-2); return y+'-'+m+'-'+da; }
+  if(!v) return ''; var s=String(v).trim(); var m=s.match(/^([0-3]?\d)\/?([01]?\d)\/?(\d{2,4})$/); if(m){ var d=m[1], mo=m[2], y=m[3]; if(y.length===2) y='20'+y; return y+'-'+('0'+mo).slice(-2)+'-'+('0'+d).slice(-2); }
+  var iso = s.match(/\d{4}-\d{2}-\d{2}/); return iso?iso[0]:s;
+}
+function normaliseStatus(s){ if(!s) return ''; s=String(s).trim().toLowerCase(); if(s.indexOf('progress')>-1) return 'In Progress'; if(s.indexOf('won')>-1) return 'Won'; if(s.indexOf('lost')>-1) return 'Lost'; if(s.indexOf('proposal')>-1) return 'In Progress'; return s.replace(/\b\w/g,function(c){return c.toUpperCase();}); }
+
+function loadBudget(){ return Number(localStorage.getItem('viva_budget')||408000); }
+function saveBudget(v){ localStorage.setItem('viva_budget', String(v)); }
+function loadDeals(){ try{ return JSON.parse(localStorage.getItem('viva_deals')||'null'); }catch(e){ return null; } }
+function saveDeals(rows){ localStorage.setItem('viva_deals', JSON.stringify(rows)); }
+function loadTargets(){ try{ return JSON.parse(localStorage.getItem('viva_sector_targets')||'{}'); }catch(e){ return {}; } }
+function saveTargets(obj){ localStorage.setItem('viva_sector_targets', JSON.stringify(obj)); }
+
+var state = {
+  deals: (loadDeals() || EMBEDDED_DATA.initial).map(function(d){ return { Deal_ID: (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : String(Date.now()+Math.random())), Deal_Title:d.Deal_Title, Deal_Value:d.Deal_Value, Contact_Started:d.Contact_Started, Status:d.Status, Sector:d.Sector, Source:d.Source }; }),
+  budget: loadBudget()
+};
+var sectorTargets = loadTargets(); if(!sectorTargets || typeof sectorTargets!=='object'){ sectorTargets = {}; }
+
+function mapRows(rows){
+  function norm(k){ return (k||'').toString().toLowerCase().replace(/\s+/g,' ').trim(); }
+  return rows.map(function(r){
+    var m = {}; for(var k in r){ m[norm(k)] = r[k]; }
+    return {
+      Deal_ID: (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : String(Date.now()+Math.random())),
+      Deal_Title: m['deal_title'] || m['deal - title'] || m['title'] || m['deal'] || '',
+      Deal_Value: cleanNumber(m['deal_value'] || m['deal - value'] || m['value'] || 0),
+      Contact_Started: excelSerialToISO(m['contact_started'] || m['contact started'] || m['started'] || m['start'] || ''),
+      Status: normaliseStatus(m['status'] || m['unnamed: 3'] || ''),
+      Sector: m['sector'] || m['unnamed: 5'] || '',
+      Source: m['source'] || m['lead source'] || ''
+    };
+  });
+}
+function computeMetrics(deals){
+  var known = deals.filter(function(d){ return d.Status; });
+  var won = known.filter(function(d){ return d.Status==='Won'; });
+  var lost = known.filter(function(d){ return d.Status==='Lost'; });
+  var prog = known.filter(function(d){ return d.Status==='In Progress'; });
+  function sum(arr){ return arr.reduce(function(s,d){ return s+cleanNumber(d.Deal_Value); },0); }
+  return { wonCount:won.length, lostCount:lost.length, progCount:prog.length, totalQuoted:sum(known), wonValue:sum(won), lostValue:sum(lost), progValue:sum(prog) };
+}
+
+var barChart=null, doughnutChart=null, sectorStatusChart=null, sectorSourcesChart=null;
+var editingId=null, selectedSector='All';
+
+function renderAll(){
+  var m = computeMetrics(state.deals);
+  var budget = state.budget, gap = Math.max(budget - m.wonValue, 0), denom = m.totalQuoted || 1;
+  document.getElementById('kpi-budget').textContent = fmtGBP(budget);
+  document.getElementById('kpi-won').textContent = fmtGBP(m.wonValue);
+  document.getElementById('kpi-gap').textContent = fmtGBP(gap);
+  document.getElementById('kpi-leads').textContent = String(m.wonCount + m.lostCount + m.progCount);
+  document.getElementById('kpi-totalq').textContent = fmtGBP(m.totalQuoted);
+  document.getElementById('kpi-pwon').textContent = pct(Math.round(100*m.wonValue/denom));
+  document.getElementById('kpi-plost').textContent = pct(Math.round(100*m.lostValue/denom));
+  document.getElementById('kpi-pout').textContent = pct(Math.round(100*m.progValue/denom));
+
+  try{
+    if(barChart && barChart.destroy) barChart.destroy();
+    if(doughnutChart && doughnutChart.destroy) doughnutChart.destroy();
+    if(window.Chart){
+      barChart = new Chart(document.getElementById('barBudget').getContext('2d'), {type:'bar', data:{labels:['Budget','Won'], datasets:[{label:'£', data:[budget, m.wonValue]}]}, options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:function(v){return '£'+v.toLocaleString('en-GB');}}}}}});
+      doughnutChart = new Chart(document.getElementById('doughnutStatus').getContext('2d'), {type:'doughnut', data:{labels:['Won','In Progress','Lost'], datasets:[{data:[m.wonValue,m.progValue,m.lostValue]}]}, options:{plugins:{legend:{position:'bottom'}}}});
+    }
+  }catch(e){ console.error(e); }
+
+  var tbody = document.querySelector('#deals-table tbody'); var q=(document.getElementById('search').value||'').toLowerCase(); tbody.innerHTML='';
+  state.deals.filter(function(d){ return title(d.Deal_Title).toLowerCase().indexOf(q)>-1; }).forEach(function(d){
+    var edit = (editingId===d.Deal_ID); var tr=document.createElement('tr');
+    if(edit){
+      tr.innerHTML = '<td><input id="e-title" type="text" value="'+title(d.Deal_Title)+'"/></td>' +
+      '<td><input id="e-value" type="number" step="100" value="'+(Number(d.Deal_Value)||0)+'"/></td>' +
+      '<td><select id="e-status"><option '+(d.Status==='In Progress'?'selected':'')+'>In Progress</option><option '+(d.Status==='Won'?'selected':'')+'>Won</option><option '+(d.Status==='Lost'?'selected':'')+'>Lost</option></select></td>' +
+      '<td><input id="e-sector" type="text" value="'+(d.Sector||'')+'"/></td>' +
+      '<td><input id="e-source" type="text" value="'+(d.Source||'')+'"/></td>' +
+      '<td><input id="e-started" type="date" value="'+((d.Contact_Started||'').toString().slice(0,10))+'"/></td>' +
+      '<td><button class="btn btn-xs" data-save="'+d.Deal_ID+'">Save</button> <button class="btn btn-xs btn-danger" data-cancel="'+d.Deal_ID+'">Cancel</button></td>';
+    } else {
+      tr.innerHTML = '<td>'+title(d.Deal_Title)+'</td><td>'+fmtGBP(d.Deal_Value)+'</td><td>'+(d.Status||'')+'</td><td>'+
+        (d.Sector||'')+'</td><td>'+(d.Source||'')+'</td><td>'+(d.Contact_Started||'')+'</td>' +
+        '<td><div class="row" style="gap:6px"><button class="btn btn-xs" data-edit="'+d.Deal_ID+'">Edit</button>' +
+        '<button class="btn btn-xs btn-danger" data-del="'+d.Deal_ID+'">Delete</button>' +
+        '<button class="btn btn-xs btn-won" data-status="'+d.Deal_ID+'" data-val="Won">Won</button>' +
+        '<button class="btn btn-xs btn-prog" data-status="'+d.Deal_ID+'" data-val="In Progress">In&nbsp;Progress</button>' +
+        '<button class="btn btn-xs btn-lost" data-status="'+d.Deal_ID+'" data-val="Lost">Lost</button></div></td>';
+    }
+    tbody.appendChild(tr);
+  });
+  document.getElementById('count-chip').textContent = state.deals.length + ' deals';
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-edit]'), function(btn){ btn.addEventListener('click', function(){ editingId = btn.getAttribute('data-edit'); renderAll(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-save]'), function(btn){ btn.addEventListener('click', function(){ var id=btn.getAttribute('data-save'); var i=state.deals.findIndex(function(x){return x.Deal_ID===id;}); if(i>-1){ state.deals[i]={
+      Deal_ID: state.deals[i].Deal_ID,
+      Deal_Title: title(document.getElementById('e-title').value),
+      Deal_Value: cleanNumber(document.getElementById('e-value').value),
+      Status: normaliseStatus(document.getElementById('e-status').value),
+      Sector: title(document.getElementById('e-sector').value),
+      Source: title(document.getElementById('e-source').value),
+      Contact_Started: document.getElementById('e-started').value
+    }; saveDeals(state.deals); editingId=null; renderAll(); } }); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cancel]'), function(btn){ btn.addEventListener('click', function(){ editingId=null; renderAll(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-del]'), function(btn){ btn.addEventListener('click', function(){ var id=btn.getAttribute('data-del'); state.deals = state.deals.filter(function(x){return x.Deal_ID!==id;}); saveDeals(state.deals); renderAll(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-status]'), function(btn){ btn.addEventListener('click', function(){ var id=btn.getAttribute('data-status'); var val=btn.getAttribute('data-val'); var i=state.deals.findIndex(function(x){return x.Deal_ID===id;}); if(i>-1){ state.deals[i].Status=val; saveDeals(state.deals); renderAll(); } }); });
+
+  renderAnalytics();
+}
+
+function topSectors(n){
+  if(!n) n=6;
+  var agg = {}; state.deals.forEach(function(d){ var s=(d.Sector&&d.Sector.trim())?d.Sector.trim():'Other'; agg[s]=(agg[s]||0)+cleanNumber(d.Deal_Value); });
+  var arr=[]; for(var k in agg){ arr.push([k, agg[k]]); }
+  arr.sort(function(a,b){return b[1]-a[1];});
+  var list = ['All']; for(var i=0;i<Math.min(n,arr.length);i++){ list.push(arr[i][0]); } return list;
+}
+function renderSectorChips(){
+  var el=document.getElementById('sector-chips'); if(!el) return; el.innerHTML='';
+  topSectors(8).forEach(function(sec){ var b=document.createElement('button'); b.className='pill'+(sec===selectedSector?' active':''); b.textContent=sec; b.addEventListener('click', function(){ selectedSector=sec; renderAnalytics(); }); el.appendChild(b); });
+}
+function renderAnalytics(){
+  renderSectorChips();
+  var deals = (selectedSector==='All') ? state.deals : state.deals.filter(function(d){ return (d.Sector||'Other')===selectedSector; });
+  var m = computeMetrics(deals);
+  var target = (selectedSector==='All') ? Object.keys(sectorTargets).reduce(function(a,k){ return a + Number(sectorTargets[k]||0); },0) : Number(sectorTargets[selectedSector]||0);
+  document.getElementById('a-target').textContent = fmtGBP(target);
+  document.getElementById('a-won').textContent = fmtGBP(m.wonValue);
+  document.getElementById('a-lost').textContent = fmtGBP(m.lostValue);
+  document.getElementById('a-out').textContent = fmtGBP(m.progValue);
+
+  try{
+    if(sectorStatusChart && sectorStatusChart.destroy) sectorStatusChart.destroy();
+    if(sectorSourcesChart && sectorSourcesChart.destroy) sectorSourcesChart.destroy();
+    if(window.Chart){
+      sectorStatusChart = new Chart(document.getElementById('sectorStatus').getContext('2d'), {type:'doughnut', data:{labels:['Won','In Progress','Lost'], datasets:[{data:[m.wonValue,m.progValue,m.lostValue]}]}, options:{plugins:{legend:{position:'bottom'}}}});
+      var srcAgg = {}; deals.forEach(function(d){ var s=(d.Source||'Other'); srcAgg[s]=(srcAgg[s]||0)+cleanNumber(d.Deal_Value); });
+      var srcArr=[]; for(var k in srcAgg){ srcArr.push([k, srcAgg[k]]); } srcArr.sort(function(a,b){return b[1]-a[1];}); srcArr=srcArr.slice(0,8);
+      sectorSourcesChart = new Chart(document.getElementById('sectorSources').getContext('2d'), {type:'bar', data:{labels:srcArr.map(function(x){return x[0];}), datasets:[{label:'£', data:srcArr.map(function(x){return x[1];})}]}, options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:function(v){return '£'+v.toLocaleString('en-GB');}}}}}});
+    }
+  }catch(e){ console.error(e); }
+
+  var tb=document.querySelector('#sector-deals tbody'); tb.innerHTML='';
+  var sorted = deals.slice().sort(function(a,b){ return cleanNumber(b.Deal_Value)-cleanNumber(a.Deal_Value); }).slice(0,15);
+  sorted.forEach(function(d){ var tr=document.createElement('tr'); tr.innerHTML='<td>'+title(d.Deal_Title)+'</td><td>'+fmtGBP(d.Deal_Value)+'</td><td>'+(d.Status||'')+'</td><td>'+(d.Source||'')+'</td><td>'+(d.Contact_Started||'')+'</td>'; tb.appendChild(tr); });
+}
+
+document.getElementById('file-input').addEventListener('change', function(e){
+  var file = e.target.files[0]; if(!file) return;
+  var reader = new FileReader(); reader.onload = function(){ try{
+    var data = reader.result; var wb = window.XLSX ? XLSX.read(data, {type:'binary'}) : null;
+    if(!wb){ alert('XLSX library not loaded. Please try CSV.'); return; }
+    var sheetName = null; for(var i=0;i<wb.SheetNames.length;i++){ if(wb.SheetNames[i].toLowerCase().indexOf('master')>-1){ sheetName = wb.SheetNames[i]; break; } }
+    if(!sheetName) sheetName = wb.SheetNames[0];
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:''});
+    state.deals = mapRows(rows); saveDeals(state.deals); renderAll(); alert('Loaded '+state.deals.length+' deals from "'+file.name+'".');
+  }catch(err){ alert('Upload failed: '+err.message); console.error(err); } };
+  reader.readAsBinaryString(file);
+});
+
+document.getElementById('add-deal').addEventListener('click', function(){
+  var deal={ Deal_ID:(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : String(Date.now()+Math.random())),
+    Deal_Title:title(document.getElementById('new-title').value), Deal_Value:cleanNumber(document.getElementById('new-value').value),
+    Status:normaliseStatus(document.getElementById('new-status').value), Sector:title(document.getElementById('new-sector').value),
+    Source:title(document.getElementById('new-source').value), Contact_Started:document.getElementById('new-started').value };
+  if(!deal.Deal_Title){ alert('Please enter a deal title'); return; }
+  state.deals.unshift(deal); saveDeals(state.deals);
+  ['new-title','new-value','new-status','new-sector','new-source','new-started'].forEach(function(id){ document.getElementById(id).value=''; });
+  renderAll();
+});
+document.getElementById('download-csv').addEventListener('click', function(){
+  var headers=['Deal_ID','Deal_Title','Deal_Value','Status','Sector','Source','Contact_Started'];
+  var lines=[headers.join(',')].concat(state.deals.map(function(d){ return headers.map(function(h){ return d[h]||''; }).join(','); }));
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download='viva-deals.csv'; a.click(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('apply-budget').addEventListener('click', function(){ var v=Number(document.getElementById('input-budget').value||0); state.budget=isFinite(v)?v:0; saveBudget(state.budget); renderAll(); });
+function sectorsList(){ var s={}, out=[]; state.deals.forEach(function(d){ var v=(d.Sector&&d.Sector.trim())?d.Sector.trim():'Other'; s[v]=1; }); for(var k in s){ out.push(k); } out.sort(); return out; }
+function renderTargetsSettings(){
+  var sel=document.getElementById('st-sector'), tb=document.querySelector('#st-table tbody'); sel.innerHTML=sectorsList().map(function(x){return '<option>'+x+'</option>';}).join(''); tb.innerHTML='';
+  Object.keys(sectorTargets).sort().forEach(function(sec){ var val=sectorTargets[sec]; var tr=document.createElement('tr'); tr.innerHTML='<td>'+sec+'</td><td>£'+Number(val||0).toLocaleString('en-GB')+'</td><td><button class="btn btn-xs btn-danger" data-st-del="'+sec+'">Delete</button></td>'; tb.appendChild(tr); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-st-del]'), function(b){ b.onclick=function(){ var sec=b.getAttribute('data-st-del'); delete sectorTargets[sec]; saveTargets(sectorTargets); renderTargetsSettings(); renderAnalytics(); }; });
+}
+document.getElementById('st-save').addEventListener('click', function(){ var sec=document.getElementById('st-sector').value; var val=Number(document.getElementById('st-value').value||0); sectorTargets[sec]=isFinite(val)?val:0; saveTargets(sectorTargets); document.getElementById('st-value').value=''; renderTargetsSettings(); renderAnalytics(); });
+
+document.getElementById('reset-default').addEventListener('click', function(){ state.deals = EMBEDDED_DATA.initial; saveDeals(state.deals); renderAll(); });
+document.getElementById('save-default').addEventListener('click', function(){ saveDeals(state.deals); alert('Saved current deals to your browser.'); });
+document.getElementById('hard-reset').addEventListener('click', function(){ try{ localStorage.removeItem('viva_deals'); localStorage.removeItem('viva_sector_targets'); }catch(e){} state.deals = EMBEDDED_DATA.initial; sectorTargets={}; renderTargetsSettings(); saveDeals(state.deals); renderAll(); });
+
+Array.prototype.forEach.call(document.querySelectorAll('nav a'), function(a){
+  a.addEventListener('click', function(e){
+    e.preventDefault();
+    var t=a.getAttribute('data-tab');
+    Array.prototype.forEach.call(document.querySelectorAll('nav a'), function(x){ x.classList.remove('active'); });
+    a.classList.add('active');
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(s){ s.classList.add('hidden'); });
+    document.getElementById(t).classList.remove('hidden');
+    if(t==='analytics') renderAnalytics();
+    if(t==='settings') renderTargetsSettings();
+  });
+});
+
+document.getElementById('input-budget').value = state.budget;
+renderTargetsSettings();
+renderAll();
+diag('Rendered OK');
+</script>
+</body>
+</html>
+
