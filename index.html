@@ -1,1 +1,160 @@
-<!-- frozen backup of version 1 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viva Pipeline — FY (Sep→Aug)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #1e293b;
+    }
+    header h1 {
+      font-size: 1.2rem;
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+    }
+    nav button {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 0.4rem 0.9rem;
+      color: #f8fafc;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    main {
+      padding: 2rem;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    .card p {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .chip {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .chip.active {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Viva Pipeline — FY (Sep→Aug)</h1>
+    <nav>
+      <button class="active">Home</button>
+      <button>Add</button>
+      <button>List</button>
+      <button>Analytics</button>
+      <button>Settings</button>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Dashboard</h2>
+    <p>Financial year KPIs (Sep→Aug). Percentages are value-based. “Leads Quoted” = Won + Lost + In Progress.</p>
+
+    <div class="grid">
+      <div class="card"><h3>Budget (FY)</h3><p>£0</p></div>
+      <div class="card"><h3>Won (FY)</h3><p>£0</p></div>
+      <div class="card"><h3>Gap to Budget</h3><p>£0</p></div>
+      <div class="card"><h3>Leads Quoted</h3><p>0</p></div>
+      <div class="card"><h3>Total Quoted Value (FY)</h3><p>£0</p></div>
+      <div class="card"><h3>% Won (Value)</h3><p>0%</p></div>
+      <div class="card"><h3>% Lost (Value)</h3><p>0%</p></div>
+      <div class="card"><h3>% Outstanding (Value)</h3><p>0%</p></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Budget vs Won (FY)</h3><p>[Chart Placeholder]</p></div>
+      <div class="card"><h3>Status (by Value)</h3><p>[Chart Placeholder]</p></div>
+    </div>
+
+    <h2>Analytics</h2>
+    <p>Pick a sector to drill into. Chips show the top sectors by total quoted value (plus “All”).</p>
+    <div class="chips">
+      <div class="chip active">All</div>
+      <div class="chip">Other</div>
+      <div class="chip">Ad Man Defence Engineering</div>
+      <div class="chip">Tech</div>
+      <div class="chip">Public Sector</div>
+      <div class="chip">Education</div>
+      <div class="chip">Healthcare</div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Target (Sector)</h3><p>£0</p></div>
+      <div class="card"><h3>Won</h3><p>£0</p></div>
+      <div class="card"><h3>Lost</h3><p>£0</p></div>
+      <div class="card"><h3>Outstanding</h3><p>£0</p></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Status mix (Value)</h3><p>[Chart Placeholder]</p></div>
+      <div class="card"><h3>Top Sources (Value)</h3><p>[Chart Placeholder]</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Top Deals in Sector</h3>
+      <p>[Deals table placeholder]</p>
+    </div>
+  </main>
+
+  <footer>
+    Viva Pipeline Dashboard — Version 1 (Frozen Copy)
+  </footer>
+</body>
+</html>
